@@ -50,6 +50,25 @@ Interpret the coefficient of `income`.
 
 Write a sentence to your smart-but-not-mathematical boss which explains the association of income with preference for the Democratic candidate. Include a notion of uncertainty.
 
+```{r}
+
+logistic_mod <- logistic_reg() %>% 
+  set_engine("glm")
+
+logistic_fit <- fit(logistic_mod,
+                    vote ~ ideology + income + gender + race,
+                    data = nes)
+
+logistic_fit %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, conf.low, conf.high)
+
+# If we divide the US population into 5 income categories and compare people in
+# two adjoining buckets, say the 3s and the 4s (since rule of 4 applies best in
+# the middle of the distribution), then the richer people are about 5% less
+# likely to prefer the Democratic candidate, all else equal, but it might be as
+# low as 4% or as high as 7%.
+```
 
 
 # Scene 2
@@ -66,7 +85,27 @@ Write two sentences explaining to your smart-but-not-mathematical boss what the 
 
 Optional: Can you write a simple dplr pipe which does, more or less, what the CART is doing, at least for the first node, and then confirms the numbers in the plot?
 
+```{r}
 
+cart_mod <- decision_tree() %>% 
+  set_engine("rpart", model = TRUE) %>% 
+  set_mode("classification")
+
+cart_fit <- fit(cart_mod,
+                vote ~ ideology + income + gender + race,
+                data = nes)
+
+cart_fit$fit %>% 
+  prp(extra = 6)
+
+# Can you write a simple dplr pipe which does, more or less, what the CART is doing, at least for the first node, and then confirms the numbers in the plot?
+
+nes %>% 
+  filter(! ideology >= 4) %>% 
+  summarise(total = n(), dems = sum(vote == "Democratic")) %>% 
+  mutate(per = dems/total)
+
+```
 
 
 # Scene 3
@@ -80,6 +119,21 @@ Print out and interpret the model.
 How many trees did the forest use? Would we get better results if we used a different number of trees?
 
 What is OOB error?
+
+```{r}
+
+rf_mod <- rand_forest() %>% 
+  set_engine("randomForest") %>% 
+  set_mode("classification") 
+
+rf_fit <- fit(rf_mod,
+              vote ~ ideology + income + gender + race,
+              data = nes)
+
+rf_fit
+
+
+```
 
 
 
